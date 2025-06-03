@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const natural = require('natural');
+const natural = require('natural'); // Importa a biblioteca natural
 
 // --- Carregar Modelos e Dados Auxiliares ---
 const modelsDir = path.join(__dirname, 'models');
@@ -12,7 +12,6 @@ try {
     console.log("tfidf_model.json carregado com sucesso.");
 } catch (err) {
     console.error("Erro ao carregar tfidf_model.json:", err);
-    // Tratar o erro ou lançar para interromper a inicialização se crítico
 }
 
 let svmModel = null;
@@ -38,12 +37,13 @@ try {
     const stopwordsData = fs.readFileSync(path.join(modelsDir, 'portuguese_stopwords.json'), 'utf8');
     portugueseStopwords = JSON.parse(stopwordsData);
     console.log("portuguese_stopwords.json carregado com sucesso.");
-} catch (err) {
+} catch (err)
+    {
     console.error("Erro ao carregar portuguese_stopwords.json:", err);
 }
 
-const stemmer = new natural.PorterStemmerPt();
-console.log("Stemmer (PorterStemmerPt) inicializado.");
+// Não é necessário instanciar o stemmer. O método .stem() é chamado estaticamente.
+// console.log("Stemmer (PorterStemmerPt) pronto para uso estático.");
 
 // --- Funções de Pré-processamento ---
 
@@ -64,8 +64,14 @@ function preprocessText(text) {
     // 4. Remoção de Stopwords
     tokens = tokens.filter(token => !portugueseStopwords.includes(token));
 
-    // 5. Stemming
-    tokens = tokens.map(token => stemmer.stem(token));
+    // 5. Stemming (usando o método estático)
+    try {
+        tokens = tokens.map(token => natural.PorterStemmerPt.stem(token));
+    } catch (e) {
+        console.error("Erro durante o stemming com natural.PorterStemmerPt:", e);
+        // Retornar tokens não stemizados ou lidar com o erro como preferir
+        // Neste caso, retornaremos os tokens como estavam antes do stemming se falhar.
+    }
 
     return tokens;
 }
@@ -81,7 +87,6 @@ function calculateTfIdf(processedTokens) {
         return null;
     }
 
-
     const vocab = tfidfModel.vocabulary_;
     const idfValues = tfidfModel.idf_;
     const ngramRange = tfidfModel.ngram_range || [1, 1];
@@ -90,7 +95,7 @@ function calculateTfIdf(processedTokens) {
 
     let ngrams = [];
     for (let n = ngramRange[0]; n <= ngramRange[1]; n++) {
-        if (processedTokens.length >= n) { // Garante que há tokens suficientes para o n-grama
+        if (processedTokens.length >= n) {
             for (let i = 0; i <= processedTokens.length - n; i++) {
                 ngrams.push(processedTokens.slice(i, i + n).join(' '));
             }
@@ -141,12 +146,9 @@ function predictIntent(tfidfVector) {
     }
     if (!tfidfVector || !Array.isArray(tfidfVector) || tfidfVector.length === 0) {
         console.error("predictIntent: Vetor TF-IDF de entrada é inválido ou vazio.");
-        // Retornar null ou uma intenção de fallback, dependendo da política de erro.
-        // Se o tfidfVector for menor que o esperado, pode dar erro no produto escalar.
-        // O vocabulário do TF-IDF tem um tamanho fixo. O tfidfVector deve ter esse tamanho.
         if (!tfidfVector || tfidfVector.length !== (tfidfModel.idf_ ? tfidfModel.idf_.length : -1) ) {
              console.error(`predictIntent: Comprimento do tfidfVector (${tfidfVector ? tfidfVector.length : 'undefined'}) não corresponde ao esperado (${tfidfModel.idf_ ? tfidfModel.idf_.length : 'undefined'}).`);
-             return 'fallback_intent_vector_length_mismatch'; // ou null
+             return 'fallback_intent_vector_length_mismatch';
         }
     }
 
@@ -159,10 +161,8 @@ function predictIntent(tfidfVector) {
     for (let i = 0; i < classes.length; i++) {
         let score = 0;
         const classCoefficients = coefficients[i];
-        // O comprimento do classCoefficients deve ser o mesmo do tfidfVector (tamanho do vocabulário)
-        const len = Math.min(tfidfVector.length, classCoefficients.length); // Segurança, mas deveriam ser iguais
+        const len = Math.min(tfidfVector.length, classCoefficients.length);
         if (tfidfVector.length !== classCoefficients.length) {
-            // Isso não deveria acontecer se o tfidfVector foi gerado corretamente com base no vocabulário do tfidfModel
             console.warn(`predictIntent: Discrepância de comprimento para classe ${classes[i]}. TF-IDF: ${tfidfVector.length}, Coefs: ${classCoefficients.length}`);
         }
 
@@ -181,12 +181,12 @@ function predictIntent(tfidfVector) {
         return classes[predictedIntentIndex];
     }
     console.warn("predictIntent: Nenhuma intenção pôde ser predita (predictedIntentIndex === -1).");
-    return 'fallback_intent_no_prediction'; // Ou uma intenção padrão de fallback
+    return 'fallback_intent_no_prediction';
 }
 
 // --- Extração de Entidades ---
 function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& significa a string toda matched
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function extractEntities(text) {
@@ -195,7 +195,6 @@ function extractEntities(text) {
         return [];
     }
     if (typeof text !== 'string' || text.trim() === '') {
-        // console.warn("extractEntities: Texto de entrada é inválido ou vazio.");
         return [];
     }
 
@@ -209,10 +208,7 @@ function extractEntities(text) {
                 const escapedValue = escapeRegExp(value.toLowerCase());
                 const regex = new RegExp(`\\b${escapedValue}\\b`, 'g');
                 if (textLower.match(regex)) {
-                    // Para obter o valor original do texto, precisamos buscar a correspondência no texto original
-                    // Isso é mais complexo se houver sobreposição ou múltiplas ocorrências.
-                    // Por simplicidade, retornamos o valor do dicionário (que já está em minúsculas).
-                    foundEntities.push({ type: entityType, value: value, rawMatchInText: value }); // Simplificado
+                    foundEntities.push({ type: entityType, value: value, rawMatchInText: value });
                 }
             }
         }
@@ -225,7 +221,7 @@ function extractEntities(text) {
     }
 
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    while ((match = emailRegex.exec(textLower)) !== null) { // Usar textLower para regex de email
+    while ((match = emailRegex.exec(textLower)) !== null) {
         foundEntities.push({ type: 'email', value: match[0], rawMatchInText: match[0] });
     }
 
@@ -246,9 +242,6 @@ module.exports = {
     calculateTfIdf,
     predictIntent,
     extractEntities,
-    // Apenas para fins de teste ou depuração, se necessário:
-    // getTfidfModel: () => tfidfModel,
-    // getSvmModel: () => svmModel
 };
 
-console.log("nlp_utils.js carregado e pronto para uso.");
+console.log("nlp_utils.js carregado e pronto para uso (stemmer estático).");
