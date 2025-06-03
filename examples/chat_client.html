@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Test - IA Planos de Saúde</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        #chatContainer { width: 90%; max-width: 600px; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; display: flex; flex-direction: column; }
+        h1 { text-align: center; color: #333; padding: 20px 0; margin: 0; background-color: #007bff; color: white; border-top-left-radius: 8px; border-top-right-radius: 8px;}
+        #chatHistory { height: 400px; overflow-y: auto; padding: 20px; border-bottom: 1px solid #eee; }
+        .message { margin-bottom: 15px; padding: 10px; border-radius: 5px; line-height: 1.4; }
+        .user-message { background-color: #007bff; color: white; align-self: flex-end; text-align: right; margin-left: auto; max-width: 80%;}
+        .ia-message { background-color: #e9e9eb; color: #333; align-self: flex-start; text-align: left; margin-right: auto; max-width: 80%;}
+        .error-message { background-color: #ffdddd; color: #d8000c; text-align: center;}
+        #inputContainer { display: flex; padding: 20px; border-top: 1px solid #eee;}
+        #userInput { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-right: 10px; }
+        #sendButton { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #sendButton:hover { background-color: #0056b3; }
+        #nlpDebugInfo { padding: 10px 20px; background-color: #f0f0f0; font-size: 0.9em; color: #555; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+        #nlpDebugInfo p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div id="chatContainer">
+        <h1>Chat - IA Planos de Saúde</h1>
+        <div id="chatHistory">
+            <!-- Mensagens do chat aparecerão aqui -->
+        </div>
+        <div id="inputContainer">
+            <input type="text" id="userInput" placeholder="Digite sua mensagem...">
+            <button id="sendButton">Enviar</button>
+        </div>
+        <div id="nlpDebugInfo">
+            <p><strong>Intenção:</strong> <span id="detectedIntent">N/A</span></p>
+            <p><strong>Entidades:</strong> <span id="extractedEntities">N/A</span></p>
+            <p><strong>Etapa Funil:</strong> <span id="funnelStage">N/A</span></p>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chatHistory');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        const detectedIntentEl = document.getElementById('detectedIntent');
+        const extractedEntitiesEl = document.getElementById('extractedEntities');
+        const funnelStageEl = document.getElementById('funnelStage');
+
+        const userId = "clientTestUser_" + Date.now(); // UserId simples para teste, diferente a cada refresh
+
+        function addMessageToHistory(text, sender, type = '') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ia-message');
+            if (type === 'error') {
+                messageDiv.classList.remove('ia-message'); // Remove a classe padrão se for erro
+                messageDiv.classList.add('error-message');
+            }
+            messageDiv.textContent = text;
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll para a última mensagem
+        }
+
+        function updateDebugInfo(intent, entities, funnelStage) {
+            detectedIntentEl.textContent = intent || 'N/A';
+            if (entities && entities.length > 0) {
+                extractedEntitiesEl.textContent = entities.map(e => `${e.type}: ${e.value}`).join(', ');
+            } else {
+                extractedEntitiesEl.textContent = 'Nenhuma';
+            }
+            funnelStageEl.textContent = funnelStage || 'N/A';
+        }
+
+        async function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (!messageText) return;
+
+            addMessageToHistory(messageText, 'user');
+            userInput.value = ''; // Limpar input
+
+            try {
+                const response = await fetch('http://localhost:3000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: messageText,
+                        userId: userId
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorMsg = `Erro na requisição: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg += ` - ${errorData.error || 'Erro desconhecido do servidor.'}`;
+                    } catch (e) {
+                        // Não conseguiu parsear JSON de erro, usar o statusText
+                        errorMsg += ` - ${response.statusText}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                const data = await response.json();
+
+                addMessageToHistory(data.iaReply, 'ia');
+                updateDebugInfo(
+                    data.detectedIntent,
+                    data.extractedEntities,
+                    data.conversationState ? data.conversationState.currentEtapaFunil : 'N/A'
+                );
+
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                addMessageToHistory(`Erro: ${error.message || 'Não foi possível conectar ao servidor.'}`, 'ia', 'error');
+                updateDebugInfo('Erro', [], 'Erro');
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Mensagem inicial da IA (opcional)
+        addMessageToHistory("Olá! Sou sua assistente virtual para planos de saúde. Como posso ajudar?", 'ia');
+        updateDebugInfo(null, null, 'ToFu'); // Estado inicial do debug info
+    </script>
+</body>
+</html>

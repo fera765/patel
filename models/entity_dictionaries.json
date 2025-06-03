@@ -1,0 +1,54 @@
+{
+  "tipo_plano": [
+    "coletivo por adesão",
+    "empresarial",
+    "estudantes",
+    "individual"
+  ],
+  "nome_plano": [
+    "plano abc",
+    "plano x",
+    "plano xpto",
+    "plano y",
+    "plano z"
+  ],
+  "tipo_plano_preferencia": [
+    "básico",
+    "completo"
+  ],
+  "procedimento_medico": [
+    "cirurgia bariátrica",
+    "exames de alta complexidade",
+    "fisioterapia",
+    "parto",
+    "tratamento ortodôntico"
+  ],
+  "nome_hospital": [
+    "hospital sírio libanês"
+  ],
+  "nome_laboratorio": [
+    "laboratórios"
+  ],
+  "bairro_cidade": [
+    "pinheiros",
+    "tijuca"
+  ],
+  "especialidade_medica": [
+    "cardiologista"
+  ],
+  "tipo_atendimento": [
+    "pediátrico"
+  ],
+  "termo_plano": [
+    "coparticipação",
+    "franquia"
+  ],
+  "tipo_mudanca_plano": [
+    "downgrade",
+    "upgrade"
+  ],
+  "informacao_pessoal": [
+    "família",
+    "idade"
+  ]
+}

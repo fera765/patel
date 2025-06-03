@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fera765/patel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fera765/patel/issues"
+  },
+  "homepage": "https://github.com/fera765/patel#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "natural": "^8.1.0"
+  }
+}

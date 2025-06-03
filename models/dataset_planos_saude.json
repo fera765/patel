@@ -1,0 +1,140 @@
+{
+  "dataset": [
+    {
+      "etapa_funil": "ToFu",
+      "intencao": "saudacao",
+      "exemplos_usuario": ["Oi", "Olá", "Bom dia", "Boa tarde", "Boa noite", "E aí"],
+      "entidades": [],
+      "resposta_ia": "Olá! Sou seu assistente virtual para planos de saúde. Como posso te ajudar hoje?"
+    },
+    {
+      "etapa_funil": "ToFu",
+      "intencao": "despedida",
+      "exemplos_usuario": ["Tchau", "Até logo", "Adeus", "Até mais"],
+      "entidades": [],
+      "resposta_ia": "Até logo! Se precisar de mais alguma coisa, é só chamar."
+    },
+    {
+      "etapa_funil": "ToFu",
+      "intencao": "agradecimento",
+      "exemplos_usuario": ["Obrigado", "Valeu", "Muito obrigado", "Agradecido"],
+      "entidades": [],
+      "resposta_ia": "De nada! Fico feliz em ajudar."
+    },
+    {
+      "etapa_funil": "ToFu",
+      "intencao": "informacao_geral_plano_saude",
+      "exemplos_usuario": [
+        "O que é um plano de saúde?",
+        "Como funciona um plano de saúde?"
+      ],
+      "entidades": [],
+      "resposta_ia": "Um plano de saúde é um serviço que oferece acesso a uma rede de médicos, hospitais e laboratórios por um valor mensal. Ele te ajuda a cuidar da sua saúde e ter mais tranquilidade em momentos de necessidade."
+    },
+    {
+      "etapa_funil": "ToFu",
+      "intencao": "informacao_tipos_plano",
+      "exemplos_usuario": [
+        "Quais tipos de planos de saúde existem?",
+        "Qual a diferença entre plano individual e empresarial?"
+      ],
+      "entidades": [],
+      "resposta_ia": "Existem diversos tipos de planos de saúde: Individual/Familiar, Coletivo Empresarial e Coletivo por Adesão (para categorias profissionais). Cada um tem suas particularidades. Gostaria de detalhes sobre algum deles?"
+    },
+    {
+      "etapa_funil": "MoFu",
+      "intencao": "comparar_planos",
+      "exemplos_usuario": [
+        "Qual a diferença do plano X para o plano Y?",
+        "Me ajude a comparar as opções de planos."
+      ],
+      "entidades": [],
+      "resposta_ia": "Para te ajudar a comparar, preciso saber mais sobre o que você procura. Por exemplo, frequência de uso, preferência por hospitais, etc."
+    },
+    {
+      "etapa_funil": "MoFu",
+      "intencao": "detalhes_cobertura_especifica",
+      "exemplos_usuario": [
+        "O plano X cobre cirurgia bariátrica?",
+        "Tenho cobertura para parto no plano Y?"
+      ],
+      "entidades": [
+        {"tipo_entidade": "nome_plano", "valor_entidade": "plano X"},
+        {"tipo_entidade": "procedimento_medico", "valor_entidade": "cirurgia bariátrica"}
+      ],
+      "resposta_ia": "Para verificar a cobertura específica de [procedimento_medico] no [nome_plano], o ideal é consultar as condições gerais do plano. Posso te ajudar a encontrar onde verificar."
+    },
+    {
+      "etapa_funil": "BoFu",
+      "intencao": "solicitar_cotacao_plano",
+      "exemplos_usuario": [
+        "Quanto custa um plano?",
+        "Gostaria de uma cotação.",
+        "Quero saber o preço.",
+        "Me faz uma cotação."
+      ],
+      "entidades": [],
+      "resposta_ia": "Com certeza! Para iniciarmos sua cotação, por favor, me informe seu nome completo."
+    },
+    {
+      "etapa_funil": "BoFu",
+      "intencao": "informar_dado_para_cotacao",
+      comment: "Intenção genérica para quando o usuário responde a uma pergunta de coleta de dados. A lógica de qual dado está sendo informado será controlada pelo 'currentCollectionStep' na sessão.",
+      "exemplos_usuario": [
+        "Meu nome é Carlos Silva",
+        "Carlos Silva",
+        "Tenho 33 anos",
+        "33",
+        "Moro em Campinas",
+        "Campinas",
+        "Sim, tenho dependentes",
+        "Não, sou só eu",
+        "Para mim e minha esposa de 38 anos",
+        "Sou de Salvador e tenho 28 anos",
+        "Ana, 25, Porto Alegre, sem dependentes"
+      ],
+      "entidades": [
+        {"tipo_entidade": "nome_usuario", "valor_entidade": "Carlos Silva"},
+        {"tipo_entidade": "idade", "valor_entidade": "33"},
+        {"tipo_entidade": "cidade_cotacao", "valor_entidade": "Campinas"},
+        {"tipo_entidade": "resposta_dependente_sim_nao", "valor_entidade": "sim"},
+        {"tipo_entidade": "resposta_dependente_sim_nao", "valor_entidade": "nao"},
+        {"tipo_entidade": "info_dependentes", "valor_entidade": "esposa de 38 anos"}
+      ],
+      comment2: "As respostas IA para esta intenção serão dinâmicas, baseadas no passo da coleta no conversation_manager.js",
+      "respostas_sequenciais_cotacao": {
+        "ask_nome": "Com certeza! Para iniciarmos sua cotação, por favor, me informe seu nome completo.",
+        "ask_idade": "Obrigado, [nome_usuario]. Agora, qual a sua idade?",
+        "ask_cidade": "Entendido, [idade] anos. Em qual cidade você reside e gostaria de cobertura?",
+        "ask_dependentes_sim_nao": "Anotado: cidade de [cidade_cotacao]. Você gostaria de incluir dependentes neste plano? (Sim ou Não)",
+        "ask_dependentes_detalhes": "Entendido. Por favor, informe as idades dos dependentes ou para quem mais seria o plano (ex: esposa 38 anos, filho 10 anos).",
+        "final_com_dependentes": "Perfeito, [nome_usuario]! Recebi todas as informações para sua cotação em [cidade_cotacao] (Idade: [idade]), incluindo os seguintes dependentes: [info_dependentes]. Nossos consultores entrarão em contato em breve. Muito obrigado!",
+        "final_sem_dependentes": "Perfeito, [nome_usuario]! Recebi todas as informações para sua cotação em [cidade_cotacao] (Idade: [idade]). Nossos consultores entrarão em contato em breve. Muito obrigado!"
+      },
+      "resposta_ia_fallback_coleta": "Entendi. E qual seria [proximo_dado_faltante]?"
+      comment3: "Este fallback seria usado se a lógica de passo falhar, o CM que montaria a pergunta."
+    },
+    {
+      "etapa_funil": "BoFu",
+      "intencao": "fechar_contrato_plano",
+      "exemplos_usuario": [
+        "Quero contratar o plano X.",
+        "Como faço para assinar o contrato?"
+      ],
+      "entidades": [
+        {"tipo_entidade": "nome_plano", "valor_entidade": "plano X"}
+      ],
+      "resposta_ia": "Ótima notícia, [nome_usuario]! Para darmos seguimento à contratação do [nome_plano], um de nossos consultores irá te auxiliar com os próximos passos. Ele entrará em contato em breve!"
+    },
+    {
+      "etapa_funil": "FAQ",
+      "intencao": "faq_cancelar_plano",
+      "exemplos_usuario": [
+        "Como faço para cancelar meu plano de saúde?"
+      ],
+      "entidades": [],
+      "resposta_ia": "Para cancelar seu plano de saúde, você geralmente precisa entrar em contato diretamente com a operadora. As condições podem variar."
+    }
+    // ... (outras FAQs e intenções informativas devem ser mantidas aqui) ...
+  ]
+}
